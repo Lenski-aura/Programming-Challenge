@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+public class TagReader {
 public static void main(String[] args) {
 
         System.out.println("Progam has started");
@@ -19,10 +20,11 @@ public static void main(String[] args) {
         };
 
       //Process each file one by one
+     int finalScore = 0;
 
       for (String path : paths) {
 
-        List<String> rawLines = TagReader.readFile(new String[]{path});
+        List<String> rawLines = FileHelper.readFile(new String[]{path});
 
 
         List<PhotoType> processsedPhotos = parsePhotos(rawLines);
@@ -41,16 +43,20 @@ public static void main(String[] args) {
              verticals.clear(); // Empty the temp list for the next pair
         } 
     }
-
+        
     
     
     //Note: Potentially look into a smarter algorithm for pairing verticals for better score.
     //Note: Call function into the main and print it out.
 }
-int totalScore = TagReader.pointTally.totalScore(slideshow);
+
+      
+int totalScore = FileHelper.pointTally.totalScore(slideshow);
     System.out.println("Total Score for " + path + ": " + totalScore);
 
+    finalScore += totalScore;
       }
+    System.out.println("Final Score for all files: " + finalScore);
     }
 
  static java.util.Map<String, Integer> tagMap = new java.util.HashMap<>();
@@ -126,7 +132,7 @@ static class Slide { //can hold either two vertical or one horizontal photos.
     }
 
 
-public class TagReader {
+public class FileHelper {
     public static List<String> readFile(String[] args) {
 
         File file = new File(args[0]);
@@ -184,7 +190,7 @@ static class pointTally {
         }
         return total;
     }
-}}
+}}}
 
 
 
