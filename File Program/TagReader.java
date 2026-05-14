@@ -1,112 +1,142 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public class TagReader {
-public static void main(String[] args) {
+public class TagReader { //main method class, wraps around the whole program, calls the file reader, processes the photos, creates the slideshow, and calculates the score.
+    public static void main(String[] args) {
 
-        System.out.println("Progam has started");
+            System.out.println("Progam has started");
 
-        String[] paths = {
-            "C:\\Users\\loljo\\Documents\\Programming Challenge\\Data-sets\\b_lovely_landscapes.txt",
-            "C:\\Users\\loljo\\Documents\\Programming Challenge\\Data-sets\\c_memorable_moments.txt",
-            "C:\\Users\\loljo\\Documents\\Programming Challenge\\Data-sets\\d_pet_pictures.txt",
-            "C:\\Users\\loljo\\Documents\\Programming Challenge\\Data-sets\\e_shiny_selfies.txt"
-        };
+            String[] paths = {
+                "C:\\Users\\loljo\\Documents\\Programming Challenge\\Data-sets\\b_lovely_landscapes.txt",
+                "C:\\Users\\loljo\\Documents\\Programming Challenge\\Data-sets\\c_memorable_moments.txt",
+                "C:\\Users\\loljo\\Documents\\Programming Challenge\\Data-sets\\d_pet_pictures.txt",
+                "C:\\Users\\loljo\\Documents\\Programming Challenge\\Data-sets\\e_shiny_selfies.txt"
+            };
 
-      //Process each file one by one
-     int finalScore = 0;
-
-      for (String path : paths) {
-
-        List<String> rawLines = FileHelper.readFile(new String[]{path});
-
-
-        List<PhotoType> processsedPhotos = parsePhotos(rawLines);
-  
-
-        List<Slide> slideshow = new ArrayList<>();
-        List<PhotoType> verticals = new ArrayList<>();
-
-        for (PhotoType p : processsedPhotos) {
-            if (!p.isVertical) {
-                slideshow.add(new Slide(p));  // Horizontal photos become slides instantly
-            } else {
-            verticals.add(p); // Save verticals to pair them up later
-            if (verticals.size() == 2) {
-                slideshow.add(new Slide(verticals.get(0), verticals.get(1)));
-             verticals.clear(); // Empty the temp list for the next pair
-        } 
-    }
         
-    
-    
-    //Note: Potentially look into a smarter algorithm for pairing verticals for better score.
-    //Note: Call function into the main and print it out.
-}
+        int finalScore = 0; // this will accumulate the total score across all files, which is printed at the end of the program.
 
-      
-int totalScore = FileHelper.pointTally.totalScore(slideshow);
+        for (String path : paths) { //for loop that will process the files in each array.
+
+            List<String> rawLines = FileHelper.readFile(new String[]{path});
+
+
+            List<PhotoType> processsedPhotos = parsePhotos(rawLines);
+    
+
+            List<Slide> slideshow = new ArrayList<>();
+            List<PhotoType> verticals = new ArrayList<>();
+
+            for (PhotoType p : processsedPhotos) {
+
+                if (!p.isVertical) {
+                    slideshow.add(new Slide(p));  // Horizontal photos become slides instantly
+
+                } else {
+
+                verticals.add(p); // Save verticals to pair them up later
+
+                if (verticals.size() == 2) {
+                    slideshow.add(new Slide(verticals.get(0), verticals.get(1)));
+                verticals.clear(); // Empty the temp list for the next pair
+            } 
+        }
+         
+    }
+
+    
+
+    int totalScore = FileHelper.pointTally.totalScore(slideshow);  //uses other classes to calculate the score for the slideshow created from the current file, which is then printed and added to the final score.
     System.out.println("Total Score for " + path + ": " + totalScore);
 
-    finalScore += totalScore;
+    finalScore += totalScore; // Accumulate the score for this file into the final score
+
+    printSlideshow(slideshow, path);
+
       }
+
     System.out.println("Final Score for all files: " + finalScore);
+
     }
 
- static java.util.Map<String, Integer> tagMap = new java.util.HashMap<>();
- static int tagCounter = 0;
+    public static void printSlideshow(List<Slide> slideshow, String path) {
+        String outputPath = path.replace(".txt", "_output.txt"); // Creates an output file name based on the input file name.
+        try {
+            java.io.PrintWriter writer = new java.io.PrintWriter(new FileWriter(outputPath)); //PrintWriter used for writing the slideshow to a file.
+            writer.println(slideshow.size()); // First line is the number of slides in the slideshow.
+            for (Slide s : slideshow) {
+                writer.println(s);
+            }
+            writer.close();
+            System.out.println("Output written to: " + outputPath);
+        } catch (IOException e) {
+            System.out.println("Error writing output for " + path + ": " + e.getMessage());
+        }
+    }
 
- public static int getTagId(String tag) {
-    return tagMap.computeIfAbsent(tag, k -> tagCounter++);
- }
 
- public static List<PhotoType> parsePhotos (List<String> rawLines) {
 
-        List<PhotoType> photos = new ArrayList<>();
+            static Map<String, Integer> tagMap = new java.util.HashMap<>(); //Maps out unqiue tags to integers so it can be compared more easily and efficiently.
+            static int tagCounter = 0;
 
-        if (rawLines.isEmpty()) return photos;
-        
+    public static int getTagId(String tag) {
 
-        for (int i = 1; i <rawLines.size(); i++) {
-            String[] parts = rawLines.get(i).split(" ");
-            if (parts.length < 2) continue;
+        return tagMap.computeIfAbsent(tag, k -> tagCounter++);
 
-           String type = parts[0]; 
+    }
 
-           PhotoType p = new PhotoType(i - 1, type);
-        
-            for (int j = 2; j < parts.length; j++) {
-                p.tags.add(parts[j]);
+    public static List<PhotoType> parsePhotos (List<String> rawLines) { //Takes the raw lines and turns into objects that can be properly used.
+
+            List<PhotoType> photos = new ArrayList<>();
+
+            if (rawLines.isEmpty()) return photos;
+            
+
+            for (int i = 1; i <rawLines.size(); i++) { //starts at 1 to avoid the first line which is just number of photos, then ignores spaces and splits lines into parts.
+
+                String[] parts = rawLines.get(i).split(" ");
+
+                if (parts.length < 2) continue;
+
+            String type = parts[0]; 
+
+            PhotoType p = new PhotoType(i - 1, type);
+            
+                for (int j = 2; j < parts.length; j++) {
+
+                    p.tags.add(parts[j]);
+                }
+
+                photos.add(p);
             }
 
-            photos.add(p);
+
+            return photos;
         }
 
 
-        return photos;
+    static class PhotoType { //This represents a single photo, whether it's horizontal or vertical, and its tags.
+        int id;
+        boolean isVertical;
+        Set<String> tags = new HashSet<>();
+
+        public PhotoType(int id, String type) {
+            this.id = id;
+            this.isVertical = type.trim().equalsIgnoreCase("V");
+        }
     }
 
-
- static class PhotoType { //This represents a single photo, whether it's horizontal or vertical, and its tags.
-    int id;
-    boolean isVertical;
-    Set<String> tags = new HashSet<>();
-
-    public PhotoType(int id, String type) {
-        this.id = id;
-        this.isVertical = type.trim().equalsIgnoreCase("V");
-    }
-}
-
-static class Slide { //can hold either two vertical or one horizontal photos.
-    List<Integer> ids = new ArrayList<>(); 
-    Set<String> tags = new HashSet<>(); 
+    static class Slide { //can hold either two vertical or one horizontal photos.
+        List<Integer> ids = new ArrayList<>(); 
+        Set<String> tags = new HashSet<>(); 
 
     //Constructor for a single Horizontal photo
 
@@ -126,71 +156,81 @@ static class Slide { //can hold either two vertical or one horizontal photos.
 
     this.tags.addAll(p1.tags);
     this.tags.addAll(p2.tags);
+ 
+    }
+    
+    public String toString() {
+        if (ids.size() == 1) {
+           return "" + ids.get(0);
+        } else {
+            return "" + ids.get(0) + " " + ids.get(1);
 
     }
 
     }
+}
 
+    static class FileHelper {
+        public static List<String> readFile(String[] args) { //How it reads the file, takes the path as an argument, and returns a list of strings that represent the lines in the file. It also prints out when a file has been processed, and if there is an error.
 
-public class FileHelper {
-    public static List<String> readFile(String[] args) {
+            File file = new File(args[0]);
+            List<String> lines = new ArrayList<>();
+            
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(file)); //BufferedReader used for efficiently reading the file line by line.
 
-        File file = new File(args[0]);
-        List<String> lines = new ArrayList<>();
-        
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
+                    String line;
+                    while ((line = reader.readLine()) != null) {
 
-         
+                        lines.add(line);
+                    }
 
-        System.out.println(file.getName() + " has been processed");
+            
 
-        reader.close();
+            System.out.println(file.getName() + " has been processed");
 
-        } 
-        
+            reader.close();
 
-        catch (IOException e) {
-            System.out.println("Error");
+            } 
+            
 
-        }
-        
-         
-        return lines;
-        
-    }
+            catch (IOException e) {
+                System.out.println("Error");
 
-
-static class pointTally {
-
-    public static int scoreSlides(Slide s1, Slide s2) {
-
-        int common = 0;
-
-        for (String tag : s1.tags) {
-            if (s2.tags.contains(tag)) {
-                common++;
             }
+            
+            
+            return lines;
+            
         }
 
-        int only1 = s1.tags.size() - common;
-        int only2 = s2.tags.size() - common;
 
-        return Math.min(common, Math.min(only1, only2));
-    }
+    static class pointTally {
 
-    public static int totalScore(List<Slide> slideshow) {
-        int total = 0;
-        for (int i = 0; i < slideshow.size() - 1; i++) {
-            total += scoreSlides(slideshow.get(i), slideshow.get(i + 1));
+        public static int scoreSlides(Slide s1, Slide s2) { //Scoring function, defines what gets the score.
+
+            int common = 0;
+
+            for (String tag : s1.tags) { //for loop that counts the number of common tags between two slides, which is the first part of the scoring function.
+                if (s2.tags.contains(tag)) {
+                    common++;
+                }
+            }
+
+            int only1 = s1.tags.size() - common; //removes common to get unique tags
+            int only2 = s2.tags.size() - common;
+
+            return Math.min(common, Math.min(only1, only2)); //takes minimum per rules of the challenge to get the score of the slides.
         }
-        return total;
-    }
-}}}
+
+        public static int totalScore(List<Slide> slideshow) { //adds up the score of each slide transition to get the total score for the slideshow.
+            int total = 0;
+            for (int i = 0; i < slideshow.size() - 1; i++) {
+                total += scoreSlides(slideshow.get(i), slideshow.get(i + 1));
+            }
+            return total; //returns the total score for the slideshow.
+        }
+    }}}
 
 
 
