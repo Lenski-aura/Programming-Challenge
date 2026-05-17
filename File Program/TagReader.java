@@ -4,9 +4,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class TagReader { //main method class, wraps around the whole program, calls the file reader, processes the photos, creates the slideshow, and calculates the score.
@@ -33,6 +33,7 @@ public class TagReader { //main method class, wraps around the whole program, ca
     
 
             List<Slide> slideshow = new ArrayList<>();
+            
             List<PhotoType> verticals = new ArrayList<>();
 
             for (PhotoType p : processsedPhotos) {
@@ -52,7 +53,11 @@ public class TagReader { //main method class, wraps around the whole program, ca
          
     }
 
+    Collections.sort(slideshow);
+
     
+
+   
 
     int totalScore = FileHelper.pointTally.totalScore(slideshow);  //uses other classes to calculate the score for the slideshow created from the current file, which is then printed and added to the final score.
     System.out.println("Total Score for " + path + ": " + totalScore);
@@ -81,17 +86,7 @@ public class TagReader { //main method class, wraps around the whole program, ca
             System.out.println("Error writing output for " + path + ": " + e.getMessage());
         }
     }
-
-
-
-            static Map<String, Integer> tagMap = new java.util.HashMap<>(); //Maps out unqiue tags to integers so it can be compared more easily and efficiently.
-            static int tagCounter = 0;
-
-    public static int getTagId(String tag) {
-
-        return tagMap.computeIfAbsent(tag, k -> tagCounter++);
-
-    }
+    
 
     public static List<PhotoType> parsePhotos (List<String> rawLines) { //Takes the raw lines and turns into objects that can be properly used.
 
@@ -134,10 +129,15 @@ public class TagReader { //main method class, wraps around the whole program, ca
         }
     }
 
-    static class Slide { //can hold either two vertical or one horizontal photos.
+    static class Slide implements Comparable<Slide> { //can hold either two vertical or one horizontal photos.
         List<Integer> ids = new ArrayList<>(); 
         Set<String> tags = new HashSet<>(); 
 
+
+        @Override
+        public int compareTo(Slide other) { //This is the sorting function, it sorts the slides based on the number of tags they have,.
+            return Integer.compare(this.tags.size(), other.tags.size());
+        }
     //Constructor for a single Horizontal photo
 
     public Slide (PhotoType photo) {
@@ -150,6 +150,11 @@ public class TagReader { //main method class, wraps around the whole program, ca
         this.ids.add(p1.id);
         this.ids.add(p2.id);
     
+   
+    
+
+    
+
 
     //This is the merge!
     //addAll takes everything from the photo's set and puts it in the slide's set
@@ -231,6 +236,7 @@ public class TagReader { //main method class, wraps around the whole program, ca
             return total; //returns the total score for the slideshow.
         }
     }}}
+
 
 
 
